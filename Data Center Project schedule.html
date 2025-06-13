@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Center Deep Dive Project Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .nav-tab:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .project-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+        
+        .day-schedule {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-header:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        
+        .day-content {
+            padding: 15px;
+            background: #f9f9f9;
+            display: none;
+        }
+        
+        .day-content.expanded {
+            display: block;
+        }
+        
+        .task-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .task-priority-high {
+            border-left-color: #f44336;
+        }
+        
+        .task-priority-medium {
+            border-left-color: #ff9800;
+        }
+        
+        .task-priority-low {
+            border-left-color: #4caf50;
+        }
+        
+        .task-checkbox {
+            margin-right: 10px;
+        }
+        
+        .task-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        .contributor-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .deliverable-tag {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .review-tag {
+            background: #ffebee;
+            color: #c62828;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .week-summary {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4caf50, #45a049);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transform: translateX(300px);
+            transition: transform 0.3s ease;
+        }
+        
+        .save-indicator.show {
+            transform: translateX(0);
+        }
+        
+        .reset-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .reset-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="save-indicator" id="saveIndicator">Progress Saved!</div>
+    
+    <div class="header">
+        <h1>Data Center Deep Dive: Analyzing Risk and Resilience in Public Companies</h1>
+        <p><strong>Duration:</strong> 6.5 weeks (June 26 - August 11, 2025) | <strong>Department:</strong> VC Investment Research Team</p>
+        <button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+    </div>
+    
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="showSection('overview')">Project Overview</div>
+        <div class="nav-tab" onclick="showSection('setup')">Setup Phase</div>
+        <div class="nav-tab" onclick="showSection('week1')">Week 1</div>
+        <div class="nav-tab" onclick="showSection('week2-3')">Weeks 2-3</div>
+        <div class="nav-tab" onclick="showSection('week4-5')">Weeks 4-5</div>
+        <div class="nav-tab" onclick="showSection('week6')">Week 6</div>
+        <div class="nav-tab" onclick="showSection('celebration')">Celebration</div>
+    </div>
+    
+    <!-- Overview Section -->
+    <div class="content-section active" id="overview">
+        <div class="project-info">
+            <div class="info-card">
+                <h3>Team Members</h3>
+                <ul>
+                    <li><strong>Arwen Liu</strong> - July (on-site), Other time (as-needed)</li>
+                    <li><strong>Stephen Ye</strong> - July-early Aug (nights), early-late Aug (all day, on-site)</li>
+                    <li><strong>Chris Zhou</strong> - Mid-June to early Aug (mostly remote)</li>
+                    <li><strong>Yuming Su</strong> - July (on-site), August (remote)</li>
+                </ul>
+            </div>
+            
+            <div class="info-card">
+                <h3>Supervisors</h3>
+                <ul>
+                    <li><strong>Dr. Zhe Wang</strong> - Primary Supervisor</li>
+                    <li><strong>Chanjuan Pan</strong> - Co-Supervisor</li>
+                </ul>
+            </div>
+            
+            <div class="info-card">
+                <h3>Key Deliverables</h3>
+                <ul>
+                    <li>Excel Spreadsheet with Risk Analysis</li>
+                    <li>Written Research Report (10-20 pages)</li>
+                    <li>Final Presentation (45 minutes)</li>
+                    <li>Company Categorization Framework</li>
+                </ul>
+            </div>
+            
+            <div class="info-card">
+                <h3>Risk Factors to Research</h3>
+                <ul>
+                    <li><strong>Power Capacity:</strong> MW capacity, energy costs, sources</li>
+                    <li><strong>Debt & Leverage:</strong> Debt-to-EBITDA, interest expenses</li>
+                    <li><strong>Customer Concentration:</strong> Major clients, revenue %</li>
+                    <li><strong>Geographic Risk:</strong> Location diversity, regulatory risks</li>
+                    <li><strong>Competition:</strong> Market position, pricing trends</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Setup Phase -->
+    <div class="content-section" id="setup">
+        <div class="week-summary">
+            <h2>Setup Phase - June 16</h2>
+            <p><strong>Objective:</strong> Team formation and initial orientation</p>
+            <p><strong>Key Result:</strong> Communication channels established and team ready to start</p>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, July 8</strong> - Financial Statements Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Download latest 10-Q forms for all companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Extract debt information from Balance Sheets</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Find revenue and interest expense data from Income Statements</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Begin populating Excel with financial data</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, July 9</strong> - First Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare progress update for Dr. Zhe's review</span>
+                    <span class="contributor-tag">Arwen & Stephen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit initial findings and any research challenges</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Download investor presentations for all companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, July 10</strong> - Investor Presentations Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Extract power capacity information (MW) from presentations</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Identify data center locations and geographic presence</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Look for customer information and concentration data</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Note competitive positioning statements</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, July 11</strong> - Earnings Call Research</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Find and download latest earnings call transcripts</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Use online tools to convert audio to text if needed</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Search transcripts for power, debt, customer, and geographic keywords</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Note analyst questions and management concerns</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, July 12</strong> - Data Compilation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Continue data entry into Excel spreadsheet</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Cross-reference information across different documents</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Weekend catch-up work if needed</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, July 13</strong> - Second Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare comprehensive progress update for Dr. Zhe</span>
+                    <span class="contributor-tag">Arwen & Stephen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit current Excel spreadsheet with collected data</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Identify data gaps and research challenges</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, July 14</strong> - Deep Dive Research</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Research remaining companies (Companies 7-10)</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Fill in missing power capacity data</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Research EBITDA data for debt ratio calculations</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Look for non-GAAP reconciliation tables in earnings releases</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, July 15</strong> - Risk Factor Documentation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create columns for each risk factor in Excel</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document power constraints and energy costs</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Record customer concentration percentages</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Note geographic concentration risks</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, July 16</strong> - Third Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit updated spreadsheet to Dr. Zhe for review</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare summary of findings for each company</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Get help with EBITDA calculations if needed</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, July 17</strong> - Quality Check & Completion</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Complete data collection for all companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Quality check: Verify all data sources and accuracy</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create supporting materials document with source links</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Note what information could not be found for each company</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, July 18</strong> - Final Preparation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Finalize Excel spreadsheet formatting</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare final supporting materials document</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Team review: Check for completeness and consistency</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, July 19</strong> - Week 2-3 Submission</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit final spreadsheet and materials to Zhe & Chanjuan</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="deliverable-tag">Final Deliverable</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Inform supervisors of completion</span>
+                    <span class="contributor-tag">Arwen & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Plan transition to Week 4-5 activities</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weeks 4-5 -->
+    <div class="content-section" id="week4-5">
+        <div class="week-summary">
+            <h2>Weeks 4-5: Data Organization & Risk Assessment</h2>
+            <p><strong>Duration:</strong> July 20 - August 2 (10 business days)</p>
+            <p><strong>Lead Contributors:</strong> Chris & Yuming (All interns participate)</p>
+            <p><strong>Key Deliverable:</strong> Risk categorization analysis and organized data</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%" id="week4-5-progress"></div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, July 20</strong> - Analysis Strategy Planning</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Team meeting: Review collected data and plan analysis approach</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Clean and organize existing spreadsheet</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create templates for ratio calculations</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, July 21</strong> - Financial Ratio Calculations</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Calculate Debt-to-EBITDA ratios for all companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Verify EBITDA calculations using earnings releases</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Calculate other relevant financial ratios</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create comparative analysis charts</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, July 22</strong> - Qualitative Risk Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Compare companies on customer concentration</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Analyze geographic concentration risks</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document power capacity and availability issues</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create qualitative risk observation notes</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, July 23</strong> - First Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit organized spreadsheet with ratios to Dr. Zhe</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Present initial analysis findings</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Get feedback on calculation methods</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, July 24</strong> - Risk Categorization Framework</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Define criteria for "solid" companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Define criteria for "risky" companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create "moderate risk" category criteria</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document reasoning for each risk level</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, July 25</strong> - Company Categorization</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Assign each company to risk categories</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document specific reasons for each categorization</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Cross-check categorizations with team members</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Identify any borderline cases for discussion</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, July 26</strong> - Analysis Documentation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create analysis document with methodology</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document key findings for each company</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Weekend work: Refine categorizations</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, July 27</strong> - Second Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit categorization framework to Dr. Zhe</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Present preliminary risk assessments</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Discuss borderline categorization cases</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, July 28</strong> - Refinement and Validation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Incorporate feedback from Dr. Zhe's review</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Refine categorization criteria based on feedback</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Validate all financial calculations</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Update analysis document with refinements</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, July 29</strong> - Comparative Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create comparative analysis across all risk factors</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Identify best and worst performers in each category</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create summary tables for easy comparison</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document key differentiators between companies</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, July 30</strong> - Third Review Checkpoint</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit refined analysis and categorizations to Dr. Zhe</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Present comparative analysis findings</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Discuss any remaining questions or concerns</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, July 31</strong> - Final Analysis Refinement</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Finalize all risk categorizations</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Complete analysis document with full methodology</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Quality check: Ensure all calculations are correct</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare supporting materials and appendices</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, August 1</strong> - Documentation Completion</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Finalize Excel spreadsheet with all analysis</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Complete written analysis document</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Team review: Check for consistency and completeness</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare transition plan for Week 6</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, August 2</strong> - Week 4-5 Submission</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit final spreadsheet and analysis document to Zhe & Chanjuan</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="deliverable-tag">Final Deliverable</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Inform supervisors of completion</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Plan for final week presentation preparation</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Week 6 -->
+    <div class="content-section" id="week6">
+        <div class="week-summary">
+            <h2>Week 6: Final Report & Presentation</h2>
+            <p><strong>Duration:</strong> August 3 - August 10 (6 business days + 2 weekend days)</p>
+            <p><strong>Lead Contributors:</strong> Stephen & Arwen (All interns participate)</p>
+            <p><strong>Key Deliverable:</strong> Written research report and final presentation</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%" id="week6-progress"></div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, August 3</strong> - Report Planning & Structure</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Team meeting: Plan report structure and presentation format</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create detailed report outline following project guidelines</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Assign writing responsibilities for each report section</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Begin drafting Introduction and Methodology sections</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, August 4</strong> - Report Writing Begins</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write Introduction: Data centers importance and project goals</span>
+                    <span class="contributor-tag">Stephen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write Methodology: Research sources and risk factors approach</span>
+                    <span class="contributor-tag">Arwen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Select 3-5 companies for detailed company profiles</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit draft sections to Dr. Zhe for initial review</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, August 5</strong> - Company Profiles & Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write detailed profiles for selected companies</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Include one "solid" and one "risky" company profile</span>
+                    <span class="contributor-tag">Chris & Yuming</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write Comparative Analysis section with key findings</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create charts and tables for the report</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, August 6</strong> - Risk Assessment Documentation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write Risk Ranking/Categorization section</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Document reasoning for "Solid" vs "Risky" classifications</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit progress update to Dr. Zhe for review</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Begin presentation deck outline</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, August 7</strong> - Presentation Development</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create PowerPoint presentation deck (45 minutes)</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                    <span class="deliverable-tag">Deliverable</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Include key findings, methodology, and company comparisons</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Assign presentation roles to all team members</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Write Conclusion section highlighting key takeaways</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, August 8</strong> - Report Finalization</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Complete written research report (10-20 pages)</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="deliverable-tag">Deliverable</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Include challenges faced during research in Conclusion</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit draft report and presentation to Dr. Zhe</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Practice presentation timing and transitions</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, August 9</strong> - Final Preparation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Incorporate final feedback from Dr. Zhe</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Finalize presentation slides and speaker notes</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit progress to Dr. Zhe for review</span>
+                    <span class="contributor-tag">Stephen & Arwen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare for potential Q&A questions</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, August 10</strong> - Final Submission & Presentation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit final report and presentation to Zhe & Chanjuan</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="deliverable-tag">Final Deliverable</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Final presentation practice and tech check</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>9:00 AM: Present to Zhe, Chanjuan & all parents</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="deliverable-tag">Final Presentation</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Participate in final project evaluation and feedback</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Celebration -->
+    <div class="content-section" id="celebration">
+        <div class="week-summary">
+            <h2>Project Celebration</h2>
+            <p><strong>Date:</strong> Monday, August 11</p>
+            <p><strong>Activity:</strong> Visit to affiliated financial firms in New York</p>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, August 11</strong> - Celebration Day</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Visit affiliated financial firms in New York</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Celebrate successful project completion</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Network with financial industry professionals</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Reflect on learning experience and future opportunities</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use localStorage for persistent progress tracking
+        const STORAGE_KEY = 'datacenter_project_progress';
+        let progressData = {};
+        let currentActiveSection = 'overview';
+
+        // Load progress from localStorage on page load
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    progressData = JSON.parse(saved);
+                    
+                    // Restore checkbox states
+                    const checkboxes = document.querySelectorAll('.task-checkbox');
+                    checkboxes.forEach((checkbox, index) => {
+                        const taskId = `task_${index}`;
+                        if (progressData[taskId]) {
+                            checkbox.checked = true;
+                            const taskText = checkbox.nextElementSibling;
+                            taskText.classList.add('task-completed');
+                        }
+                    });
+                    
+                    console.log('Progress loaded successfully');
+                } else {
+                    console.log('No saved progress found');
+                }
+            } catch (error) {
+                console.error('Error loading progress:', error);
+                progressData = {};
+            }
+        }
+
+        // Save progress to localStorage
+        function saveProgressToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+                console.log('Progress saved to localStorage');
+            } catch (error) {
+                console.error('Error saving progress:', error);
+                // Fallback to session-only if localStorage fails
+                alert('Unable to save progress persistently. Progress will only be saved for this session.');
+            }
+        }
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            currentActiveSection = sectionId;
+            updateProgressBar(sectionId);
+        }
+
+        function toggleDay(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.expand-icon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('rotated');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('rotated');
+            }
+        }
+
+        function saveProgress() {
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            checkboxes.forEach((checkbox, index) => {
+                progressData[`task_${index}`] = checkbox.checked;
+                
+                // Update task appearance
+                const taskText = checkbox.nextElementSibling;
+                if (checkbox.checked) {
+                    taskText.classList.add('task-completed');
+                } else {
+                    taskText.classList.remove('task-completed');
+                }
+            });
+            
+            // Save to localStorage
+            saveProgressToStorage();
+            
+            // Show save indicator
+            showSaveIndicator();
+            
+            // Update progress bars
+            updateProgressBar(currentActiveSection);
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateProgressBar(sectionId) {
+            const sectionElement = document.getElementById(sectionId);
+            if (!sectionElement) return;
+            
+            const checkboxes = sectionElement.querySelectorAll('.task-checkbox');
+            const checkedBoxes = sectionElement.querySelectorAll('.task-checkbox:checked');
+            
+            if (checkboxes.length > 0) {
+                const percentage = (checkedBoxes.length / checkboxes.length) * 100;
+                const progressBar = document.getElementById(`${sectionId}-progress`);
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+            }
+        }
+
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This action cannot be undone and will permanently delete your saved progress.')) {
+                progressData = {};
+                
+                // Clear from localStorage
+                try {
+                    localStorage.removeItem(STORAGE_KEY);
+                    console.log('Progress cleared from localStorage');
+                } catch (error) {
+                    console.error('Error clearing localStorage:', error);
+                }
+                
+                // Reset all checkboxes and visual states
+                document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                    const taskText = checkbox.nextElementSibling;
+                    taskText.classList.remove('task-completed');
+                });
+                
+                // Reset all progress bars
+                document.querySelectorAll('.progress-fill').forEach(bar => {
+                    bar.style.width = '0%';
+                });
+                
+                showSaveIndicator();
+            }
+        }
+
+        // Get overall project completion percentage
+        function getOverallProgress() {
+            const allCheckboxes = document.querySelectorAll('.task-checkbox');
+            const allCheckedBoxes = document.querySelectorAll('.task-checkbox:checked');
+            
+            if (allCheckboxes.length > 0) {
+                return Math.round((allCheckedBoxes.length / allCheckboxes.length) * 100);
+            }
+            return 0;
+        }
+
+        // Update the header with overall progress
+        function updateOverallProgress() {
+            const progress = getOverallProgress();
+            const header = document.querySelector('.header h1');
+            if (header) {
+                header.innerHTML = `Data Center Deep Dive: Analyzing Risk and Resilience in Public Companies <span style="font-size: 0.7em; opacity: 0.8;">(${progress}% Complete)</span>`;
+            }
+        }
+
+        // Auto-save progress periodically (every 30 seconds)
+        function setupAutoSave() {
+            setInterval(() => {
+                if (Object.keys(progressData).length > 0) {
+                    saveProgressToStorage();
+                }
+            }, 30000); // 30 seconds
+        }
+
+        // Initialize everything on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved progress first
+            loadProgress();
+            
+            // Update progress bars
+            updateProgressBar('week1');
+            updateProgressBar('week2-3');
+            updateProgressBar('week4-5');
+            updateProgressBar('week6');
+            updateOverallProgress();
+            
+            // Setup auto-save
+            setupAutoSave();
+            
+            // Add event listener to update overall progress when tasks are completed
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('task-checkbox')) {
+                    setTimeout(updateOverallProgress, 100); // Small delay to ensure DOM is updated
+                }
+            });
+            
+            console.log('Data Center Project Tracker initialized with persistent storage');
+        });
+
+        // Save progress before page unload
+        window.addEventListener('beforeunload', function() {
+            saveProgressToStorage();
+        });
+
+        // Handle storage events (if multiple tabs are open)
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                // Reload progress if changed in another tab
+                loadProgress();
+                updateProgressBar('week1');
+                updateProgressBar('week2-3');
+                updateProgressBar('week4-5');
+                updateProgressBar('week6');
+                updateOverallProgress();
+            }
+        });
+    </script>
+</body>
+</html>Day(this)">
+                <span><strong>Monday, June 16</strong> - Project Kickoff</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Chanjuan sends introduction email to all interns and Dr. Zhe Wang</span>
+                    <span class="contributor-tag">Chanjuan</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Set up communication group in Lark and Discord</span>
+                    <span class="contributor-tag">Chanjuan</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>All interns get familiar with each other through online chat</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Schedule first warm-up meeting (Arwen or Chris to coordinate)</span>
+                    <span class="contributor-tag">Arwen/Chris</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Dr. Zhe Wang provides reading materials</span>
+                    <span class="contributor-tag">Dr. Wang</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Week 1 -->
+    <div class="content-section" id="week1">
+        <div class="week-summary">
+            <h2>Week 1: Foundational Learning & Company Identification</h2>
+            <p><strong>Duration:</strong> June 26 - July 3 (5 business days)</p>
+            <p><strong>Lead Contributors:</strong> Chris & Stephen</p>
+            <p><strong>Key Deliverable:</strong> Company list, summary document, and PPT presentation</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%" id="week1-progress"></div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, June 26</strong> - Project Start & Data Center Basics</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Read introductory materials on data centers provided by Dr. Wang</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Learn difference between Data Center REITs and C-corps</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Start creating summary document outline</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Arwen and Yuming: Review materials if time permits</span>
+                    <span class="contributor-tag">Arwen & Yuming</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Friday, June 27</strong> - Financial Concepts & Company Research</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Learn basic financial terms (Revenue, Debt, EBITDA, Assets)</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Start using financial screeners (Finviz, Yahoo Finance, Google Finance)</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Search for companies using keywords: "data center", "colocation", "data center REIT"</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Begin compiling initial list of 10-15 US-listed companies</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Saturday, June 28</strong> - Weekend Work (Optional)</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Continue company research if needed</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Work on summary document</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, June 29</strong> - First Review Point</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare materials for first review with Dr. Zhe</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit draft company list and summary progress to Dr. Zhe</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Incorporate feedback from Dr. Zhe's review</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, June 30</strong> - Excel Creation & Market Analysis</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create Excel spreadsheet with company names and stock tickers</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="deliverable-tag">Deliverable</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Research market valuations for each identified company</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Identify top 5 companies by market valuation focused on data centers</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Filter out companies whose core business is not data centers</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Tuesday, July 1</strong> - PPT Creation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create PowerPoint presentation explaining data center business models</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="deliverable-tag">Deliverable</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Include slides on REITs vs C-corps differences</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Add overview of identified companies to PPT</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>All team members review PPT and provide feedback</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Wednesday, July 2</strong> - Final Preparation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Finalize summary document</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="deliverable-tag">Deliverable</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Practice presentation with team</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Decide who will present on July 7</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare for potential questions from supervisors</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Thursday, July 3</strong> - Second Review & Week 1 Completion</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Submit all Week 1 deliverables to Dr. Zhe for final review</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                    <span class="review-tag">Review Required</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Incorporate any final feedback from Dr. Zhe</span>
+                    <span class="contributor-tag">Chris & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Prepare final presentation materials for July 7</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-low">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Plan for July 4-5 vacation break</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, July 7</strong> - Week 1 Presentation</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Present foundational knowledge to Zhe & Chanjuan</span>
+                    <span class="contributor-tag">Selected Presenter</span>
+                    <span class="deliverable-tag">Presentation</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>All team members participate in Q&A session</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Receive supervisor assessment and feedback</span>
+                    <span class="contributor-tag">All Interns</span>
+                    <span class="review-tag">Assessment</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Plan transition to Week 2-3 activities</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weeks 2-3 -->
+    <div class="content-section" id="week2-3">
+        <div class="week-summary">
+            <h2>Weeks 2-3: Information Gathering</h2>
+            <p><strong>Duration:</strong> July 6 - July 19 (10 business days)</p>
+            <p><strong>Lead Contributors:</strong> Arwen & Stephen (All interns participate)</p>
+            <p><strong>Key Deliverable:</strong> Excel spreadsheet with comprehensive risk factor data</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%" id="week2-3-progress"></div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Sunday, July 6</strong> - Research Strategy Planning</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Team meeting: Divide company research responsibilities</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Learn to navigate company Investor Relations sections</span>
+                    <span class="contributor-tag">Arwen & Stephen</span>
+                </div>
+                <div class="task-item task-priority-medium">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Create research template for consistent data collection</span>
+                    <span class="contributor-tag">Arwen & Stephen</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)">
+                <span><strong>Monday, July 7</strong> - Document Collection Begins</span>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Start downloading 10-K forms for assigned companies (Companies 1-3)</span>
+                    <span class="contributor-tag">Arwen & Chris</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Start downloading 10-K forms for assigned companies (Companies 4-6)</span>
+                    <span class="contributor-tag">Stephen & Yuming</span>
+                </div>
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Focus on Business sections and Risk Factors in 10-Ks</span>
+                    <span class="contributor-tag">All Interns</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-schedule">
+            <div class="day-header" onclick="toggleDay(this)"> </div>
+            <div class="day-content">
+                <div class="task-item task-priority-high">
+                    <input type="checkbox" class="task-checkbox" onchange="saveProgress()">
+                    <span>Start downloading 10-K forms for assigned companies (Companies 1-3)</span>
+                    <span class="contributor-tag">Arwen & Chris</span>
+                </div>
+            </div>
+        </div>
+        </div>
